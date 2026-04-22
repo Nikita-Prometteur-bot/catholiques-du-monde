@@ -33,7 +33,9 @@ const upload = multer({ storage });
 // Get current content based on time
 app.get('/api/content/current', async (req, res) => {
   try {
-    const currentTime = moment().format('HH:mm:ss');
+    const currentTime = moment().local().format('HH:mm:ss');
+    console.log('Current time (local):', currentTime);
+    
     const content = await Content.findOne({
       where: {
         startTime: { [Op.lte]: currentTime },
@@ -41,12 +43,16 @@ app.get('/api/content/current', async (req, res) => {
       }
     });
 
+    console.log('Found content:', content ? content.title : 'none');
+    console.log('Content time range:', content ? `${content.startTime} - ${content.endTime}` : 'N/A');
+
     if (!content) {
       return res.status(404).json({ message: 'No content scheduled for this time' });
     }
 
     res.json(content);
   } catch (error) {
+    console.error('Error fetching current content:', error);
     res.status(500).json({ message: error.message });
   }
 });
