@@ -72,9 +72,12 @@ app.get('/api/admin/content', async (req, res) => {
 // Admin: Create content
 app.post('/api/admin/content', async (req, res) => {
   try {
+    console.log('Creating content with data:', req.body);
     const content = await Content.create(req.body);
+    console.log('Content created successfully:', content);
     res.status(201).json(content);
   } catch (error) {
+    console.error('Error creating content:', error);
     res.status(400).json({ message: error.message });
   }
 });
@@ -116,6 +119,23 @@ app.post('/api/admin/upload', upload.single('file'), (req, res) => {
     }
     const fileUrl = `http://localhost:5000/uploads/${req.file.filename}`;
     res.json({ url: fileUrl });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Admin: Login
+app.post('/api/admin/login', (req, res) => {
+  try {
+    const { username, password } = req.body;
+    
+    // Simple hardcoded credentials for demo
+    // In production, this should check against a database
+    if (username === 'admin' && password === 'admin123') {
+      res.json({ success: true, message: 'Login successful' });
+    } else {
+      res.status(401).json({ success: false, message: 'Invalid credentials' });
+    }
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
