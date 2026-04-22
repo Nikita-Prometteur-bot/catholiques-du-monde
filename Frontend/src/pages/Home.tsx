@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Download, Share2, Music, Video, Image as ImageIcon, FileText, Clock } from 'lucide-react';
 import type { Content } from '../types';
+import { api } from '../config/api';
 
 const Home: React.FC = () => {
   const [content, setContent] = useState<Content | null>(null);
@@ -23,7 +25,7 @@ const Home: React.FC = () => {
 
   const fetchCurrentContent = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/content/current');
+      const response = await axios.get(api.endpoints.getCurrentContent());
       setContent(response.data);
       setLoading(false);
       setError(null);
@@ -158,6 +160,7 @@ const Home: React.FC = () => {
 
       <footer className="footer animate-fade-in">
         <p>&copy; 2026 Catholiques du Monde. All rights reserved.</p>
+        <Link to="/login" className="admin-link">Admin</Link>
       </footer>
 
       <style>{`
@@ -290,6 +293,20 @@ const Home: React.FC = () => {
           text-align: center;
           font-size: 0.8rem;
           color: var(--text-muted);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 20px;
+        }
+        .admin-link {
+          color: var(--text-muted);
+          text-decoration: none;
+          font-size: 0.8rem;
+          opacity: 0.6;
+          transition: opacity 0.3s;
+        }
+        .admin-link:hover {
+          opacity: 1;
         }
         @media (max-width: 600px) {
           .content-card {

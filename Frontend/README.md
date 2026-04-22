@@ -1,73 +1,98 @@
-# React + TypeScript + Vite
+# Catholiques du Monde - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A scheduled content landing page that displays content based on predefined time slots. Built with React, TypeScript, and Vite.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### Landing Page (`/`)
+- Responsive design for mobile and desktop
+- Displays scheduled content automatically based on current time
+- Real-time clock display
+- Support for multiple content types: Text, Image, Audio, Video
+- Download functionality (when enabled)
+- Share/republish functionality
+- Auto-refreshes content every minute
 
-## React Compiler
+### Admin Panel (`/admin`)
+- Protected by authentication
+- Create and manage time slots
+- Assign content to each time slot
+- Edit or update scheduled content
+- File upload support for media
+- Time slot overlap validation
+- Loading states and success/error notifications
+- Logout functionality
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Authentication
 
-## Expanding the ESLint configuration
+**Demo Credentials:**
+- Username: `admin`
+- Password: `admin123`
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Note: This is a simple client-side authentication for demo purposes. In production, implement proper backend authentication.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Setup
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+1. Install dependencies:
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+2. Create environment file:
+```bash
+cp .env.example .env
 ```
+
+3. Configure API URL in `.env`:
+```
+VITE_API_URL=http://localhost:5000
+```
+
+4. Run development server:
+```bash
+npm run dev
+```
+
+5. Build for production:
+```bash
+npm run build
+```
+
+## Project Structure
+
+```
+src/
+├── config/
+│   └── api.ts          # API endpoint configuration
+├── context/
+│   └── AuthContext.tsx # Authentication context
+├── pages/
+│   ├── Home.tsx        # Landing page
+│   ├── Admin.tsx       # Admin dashboard
+│   └── Login.tsx       # Login page
+├── types.ts            # TypeScript type definitions
+├── App.tsx             # Main app component with routing
+├── main.tsx            # Entry point
+└── index.css           # Global styles
+```
+
+## API Endpoints
+
+The frontend expects the following backend endpoints:
+
+- `GET /api/content/current` - Get content for current time slot
+- `GET /api/admin/content` - Get all scheduled content (admin)
+- `POST /api/admin/content` - Create new schedule (admin)
+- `PUT /api/admin/content/:id` - Update schedule (admin)
+- `DELETE /api/admin/content/:id` - Delete schedule (admin)
+- `POST /api/admin/upload` - Upload media file (admin)
+
+## Technologies
+
+- React 19
+- TypeScript
+- Vite
+- React Router
+- Axios
+- Framer Motion
+- Lucide React Icons
