@@ -4,6 +4,7 @@ export type Content = {
   description?: string;
   type: 'image' | 'text' | 'video' | 'audio';
   contentUrl: string;
+  longText?: string;
   startTime: string;
   endTime: string;
   isDownloadable: boolean;

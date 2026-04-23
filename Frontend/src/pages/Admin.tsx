@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Plus, Edit2, Trash2, X, Save, Clock, Type, Image, Music, Video, LogOut } from 'lucide-react';
+import { Plus, Edit2, Trash2, X, Save, Clock, Type, Image, Music, Video, LogOut, Upload } from 'lucide-react';
 import type { Content } from '../types';
 import { api } from '../config/api';
 
@@ -21,6 +21,7 @@ const Admin: React.FC = () => {
     description: '',
     type: 'text',
     contentUrl: '',
+    longText: '',
     startTime: '06:00:00',
     endTime: '07:00:00',
     isDownloadable: true
@@ -43,7 +44,7 @@ const Admin: React.FC = () => {
   const parseTimeToAmPm = (timeStr: string) => {
     const [hours, minutes] = timeStr.split(':');
     let h = parseInt(hours, 10);
-    const amPm = h >= 12 ? 'PM' : 'AM';
+    const amPm: 'AM' | 'PM' = h >= 12 ? 'PM' : 'AM';
     if (h > 12) h -= 12;
     if (h === 0) h = 12;
     return {
@@ -109,6 +110,23 @@ const Admin: React.FC = () => {
     setTimeout(() => setSuccessMessage(''), 3000);
   };
 
+  const autoDetectType = (url: string, file: File | null) => {
+    if (file) {
+      if (file.type.startsWith('image/')) return 'image';
+      if (file.type.startsWith('video/')) return 'video';
+      if (file.type.startsWith('audio/')) return 'audio';
+    }
+    if (url) {
+      const lowerUrl = url.toLowerCase();
+      if (lowerUrl.match(/\.(jpeg|jpg|gif|png|webp)$/)) return 'image';
+      if (lowerUrl.match(/\.(mp4|webm|ogg)$/)) return 'video';
+      if (lowerUrl.match(/\.(mp3|wav|ogg)$/)) return 'audio';
+    }
+    return 'text';
+  };
+
+  const detectedType = autoDetectType(formData.contentUrl || '', selectedFile);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError('');
@@ -143,7 +161,15 @@ const Admin: React.FC = () => {
         }
       }
 
-      const submissionData = { ...formData, contentUrl: finalContentUrl, startTime: startTime24, endTime: endTime24 };
+      // Automatically use the detected type
+      const submissionData = { 
+        ...formData, 
+        type: detectedType, 
+        contentUrl: finalContentUrl, 
+        startTime: startTime24, 
+        endTime: endTime24 
+      };
+
       if (editingContent?.id) {
         await axios.put(api.endpoints.admin.updateContent(editingContent.id), submissionData);
         showSuccess('Schedule updated successfully!');
@@ -202,6 +228,7 @@ const Admin: React.FC = () => {
       description: '',
       type: 'text',
       contentUrl: '',
+      longText: '',
       startTime: '06:00:00',
       endTime: '07:00:00',
       isDownloadable: true
@@ -293,7 +320,10 @@ const Admin: React.FC = () => {
         <div className="modal-overlay">
           <div className="modal-content animate-fade-in">
             <div className="modal-header">
-              <h2>{editingContent ? 'Edit Schedule' : 'New Schedule'}</h2>
+              <div>
+                <h2>{editingContent ? 'Edit Schedule' : 'New Schedule'}</h2>
+                <p className="modal-subtitle">{editingContent ? 'Update your content schedule' : 'Create a new content schedule'}</p>
+              </div>
               <button className="close-btn" onClick={() => setIsModalOpen(false)}><X size={20} /></button>
             </div>
             {formError && <div className="form-error">{formError}</div>}
@@ -304,21 +334,22 @@ const Admin: React.FC = () => {
                   type="text" 
                   value={formData.title} 
                   onChange={(e) => setFormData({...formData, title: e.target.value})}
+                  placeholder="Enter content title"
                   required 
                 />
               </div>
-              <div className="form-row">
+              <div className="form-row auto-detect-row">
                 <div className="form-group">
-                  <label>Type</label>
-                  <select 
-                    value={formData.type} 
-                    onChange={(e) => setFormData({...formData, type: e.target.value as any})}
-                  >
-                    <option value="text">Text / Message</option>
-                    <option value="image">Image URL</option>
-                    <option value="audio">Audio URL</option>
-                    <option value="video">Video URL</option>
-                  </select>
+                  <label>Content Type (Auto-Detected)</label>
+                  <div className="detection-badge-container">
+                    <div className={`detection-badge ${detectedType}`}>
+                      {detectedType === 'image' && <Image size={16} />}
+                      {detectedType === 'video' && <Video size={16} />}
+                      {detectedType === 'audio' && <Music size={16} />}
+                      {detectedType === 'text' && <Type size={16} />}
+                      <span>{detectedType.toUpperCase()} DETECTED</span>
+                    </div>
+                  </div>
                 </div>
                 <div className="form-group">
                   <label>Downloadable</label>
@@ -326,8 +357,8 @@ const Admin: React.FC = () => {
                     value={formData.isDownloadable ? 'yes' : 'no'} 
                     onChange={(e) => setFormData({...formData, isDownloadable: e.target.value === 'yes'})}
                   >
-                    <option value="yes">Yes</option>
-                    <option value="no">No</option>
+                    <option value="yes">✓ Yes</option>
+                    <option value="no">✗ No</option>
                   </select>
                 </div>
               </div>
@@ -342,7 +373,7 @@ const Admin: React.FC = () => {
                     >
                       {Array.from({length: 12}, (_, i) => (
                         <option key={i} value={(i + 1).toString().padStart(2, '0')}>
-                          {(i + 1).toString().padStart(2, '0')}
+                          {i + 1}
                         </option>
                       ))}
                     </select>
@@ -378,7 +409,7 @@ const Admin: React.FC = () => {
                     >
                       {Array.from({length: 12}, (_, i) => (
                         <option key={i} value={(i + 1).toString().padStart(2, '0')}>
-                          {(i + 1).toString().padStart(2, '0')}
+                          {i + 1}
                         </option>
                       ))}
                     </select>
@@ -405,32 +436,53 @@ const Admin: React.FC = () => {
                   </div>
                 </div>
               </div>
-              <div className="form-group">
-                <label>Media File (Optional - overrides URL)</label>
-                <input 
-                  type="file" 
-                  accept="image/*,audio/*,video/*"
-                  onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                />
-                {uploading && <p className="upload-status">Uploading media...</p>}
+              <div className="form-group file-upload-group">
+                <label>Media File (Optional)</label>
+                <div className="file-upload-wrapper">
+                  <input 
+                    type="file" 
+                    accept="image/*,audio/*,video/*"
+                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                    id="file-upload"
+                    className="file-input"
+                  />
+                  <label htmlFor="file-upload" className="file-upload-label">
+                    <Upload size={20} />
+                    <span>{selectedFile ? selectedFile.name : 'Choose file or drag & drop'}</span>
+                  </label>
+                </div>
+                {uploading && <p className="upload-status">⏳ Uploading media...</p>}
               </div>
               <div className="form-group">
-                <label>Content (Text or URL)</label>
-                <textarea 
+                <label>Media Source (URL)</label>
+                <input 
+                  type="text"
                   value={formData.contentUrl} 
                   onChange={(e) => setFormData({...formData, contentUrl: e.target.value})}
-                  required={!selectedFile} 
+                  placeholder="Enter image/video/audio URL"
                 />
+              </div>
+
+              <div className="form-group">
+                <label>Message Content (Long Text)</label>
+                <textarea 
+                  value={formData.longText} 
+                  onChange={(e) => setFormData({...formData, longText: e.target.value})}
+                  placeholder="Type your spiritual message here..."
+                  style={{ height: '200px' }}
+                />
+                <p className="input-hint">This text will appear below your media file.</p>
               </div>
               <div className="form-group">
                 <label>Description</label>
                 <textarea 
                   value={formData.description} 
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
+                  placeholder="Add a description (optional)"
                 />
               </div>
               <button type="submit" className="btn btn-primary btn-block" disabled={saving || uploading}>
-                {saving ? 'Saving...' : uploading ? 'Uploading...' : (
+                {saving ? '💾 Saving...' : uploading ? '📤 Uploading...' : (
                   <>
                     <Save size={18} /> Save Schedule
                   </>
@@ -576,72 +628,173 @@ const Admin: React.FC = () => {
           align-items: center;
           justify-content: center;
           z-index: 1000;
+          padding: 20px;
         }
         .modal-content {
           background: white;
           width: 100%;
-          max-width: 500px;
-          border-radius: 20px;
-          padding: 30px;
-          box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+          max-width: 550px;
+          max-height: 90vh;
+          border-radius: 24px;
+          padding: 32px;
+          box-shadow: 0 25px 80px rgba(0,0,0,0.12);
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
         }
         .modal-header {
           display: flex;
           justify-content: space-between;
-          align-items: center;
-          margin-bottom: 25px;
+          align-items: flex-start;
+          margin-bottom: 28px;
+        }
+        .modal-header h2 {
+          font-size: 1.5rem;
+          color: var(--accent);
+          margin-bottom: 4px;
+        }
+        .modal-subtitle {
+          font-size: 0.85rem;
+          color: var(--text-muted);
+          margin: 0;
         }
         .close-btn {
-          background: none;
+          background: #f5f5f5;
           border: none;
           cursor: pointer;
           color: var(--text-muted);
+          padding: 8px;
+          border-radius: 8px;
+          transition: all 0.2s;
+        }
+        .close-btn:hover {
+          background: #e0e0e0;
+          color: var(--text-main);
         }
         .form-error {
-          background: #ffebee;
-          color: #d32f2f;
-          padding: 12px;
-          border-radius: 8px;
+          background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+          color: #c62828;
+          padding: 14px 18px;
+          border-radius: 12px;
           font-size: 0.9rem;
-          margin-bottom: 20px;
+          margin-bottom: 24px;
+          border-left: 4px solid #d32f2f;
         }
         .admin-form .form-group {
-          margin-bottom: 20px;
+          margin-bottom: 22px;
         }
         .admin-form label {
           display: block;
-          margin-bottom: 8px;
-          font-weight: 500;
-          font-size: 0.9rem;
-          color: var(--text-muted);
+          margin-bottom: 10px;
+          font-weight: 600;
+          font-size: 0.85rem;
+          color: var(--text-main);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
         .admin-form input, .admin-form select, .admin-form textarea {
           width: 100%;
-          padding: 12px;
-          border: 1px solid #ddd;
-          border-radius: 10px;
-          font-size: 1rem;
+          padding: 14px 16px;
+          border: 2px solid #e8e8e8;
+          border-radius: 12px;
+          font-size: 0.95rem;
           font-family: inherit;
+          transition: all 0.2s;
+          background: #fafafa;
+        }
+        .admin-form input:focus, .admin-form select:focus, .admin-form textarea:focus {
+          outline: none;
+          border-color: var(--gold);
+          background: white;
+          box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
         }
         .admin-form textarea {
           height: 100px;
           resize: vertical;
         }
-        .form-row {
+         .form-row {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 20px;
+          margin-bottom: 20px;
+        }
+
+        .auto-detect-row {
+          margin-bottom: 24px;
+        }
+
+        .detection-badge-container {
+          padding: 8px 0;
+        }
+
+        .detection-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          padding: 8px 16px;
+          border-radius: 12px;
+          font-size: 0.8rem;
+          font-weight: 600;
+          letter-spacing: 0.5px;
+          transition: all 0.3s ease;
+        }
+
+        .detection-badge.text { background: #f5f5f5; color: #666; border: 1px solid #e0e0e0; }
+        .detection-badge.image { background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; }
+        .detection-badge.video { background: #e3f2fd; color: #1565c0; border: 1px solid #bbdefb; }
+        .detection-badge.audio { background: #fff3e0; color: #ef6c00; border: 1px solid #ffe0b2; }
+
+        .detection-badge span {
+          position: relative;
+          top: 0px;
         }
         .btn-block {
           width: 100%;
           justify-content: center;
           margin-top: 10px;
         }
-        .upload-status {
+        .input-hint {
           font-size: 0.8rem;
-          color: var(--gold);
-          margin-top: 5px;
+          color: var(--text-light);
+          margin-top: 6px;
           font-style: italic;
+        }
+        .upload-status {
+          font-size: 0.85rem;
+          color: var(--gold);
+          margin-top: 8px;
+          font-weight: 500;
+        }
+        .file-upload-group {
+          margin-bottom: 24px;
+        }
+        .file-upload-wrapper {
+          position: relative;
+        }
+        .file-input {
+          display: none;
+        }
+        .file-upload-label {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          padding: 20px;
+          border: 2px dashed #d4af37;
+          border-radius: 12px;
+          background: linear-gradient(135deg, #faf9f5 0%, #f5f0e6 100%);
+          cursor: pointer;
+          transition: all 0.3s;
+          color: var(--gold);
+          font-weight: 500;
+        }
+        .file-upload-label:hover {
+          background: linear-gradient(135deg, #f5f0e6 0%, #efe5d3 100%);
+          border-color: #c9a227;
+          transform: translateY(-2px);
+        }
+        .file-upload-label span {
+          font-size: 0.9rem;
         }
         .success-toast {
           position: fixed;
@@ -658,27 +811,34 @@ const Admin: React.FC = () => {
         .time-inputs {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 6px;
         }
         .time-select {
-          flex: 1;
-          padding: 12px;
-          border: 1px solid #ddd;
+          width: 70px; /* Specific width for hours/minutes */
+          padding: 8px 10px;
+          border: 2px solid #e8e8e8;
           border-radius: 10px;
-          font-size: 1rem;
+          font-size: 0.95rem;
           font-family: inherit;
+          background: #ffffff;
+          color: #222222; /* High contrast text */
+          cursor: pointer;
         }
         .ampm-select {
-          padding: 12px;
-          border: 1px solid #ddd;
+          width: 80px; /* Slightly wider for AM/PM */
+          padding: 8px 10px;
+          border: 2px solid #e8e8e8;
           border-radius: 10px;
-          font-size: 1rem;
+          font-size: 0.95rem;
           font-family: inherit;
-          width: 70px;
+          background: #ffffff;
+          color: #222222; /* High contrast text */
+          cursor: pointer;
         }
         .time-separator {
-          font-size: 1.2rem;
+          font-size: 1.1rem;
           color: var(--text-muted);
+          font-weight: 500;
         }
       `}</style>
     </div>

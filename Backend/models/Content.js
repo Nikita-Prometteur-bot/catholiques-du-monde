@@ -20,8 +20,12 @@ const Content = sequelize.define('Content', {
     allowNull: false,
   },
   contentUrl: {
-    type: DataTypes.STRING,
-    allowNull: false,
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  longText: {
+    type: DataTypes.TEXT,
+    allowNull: true,
   },
   startTime: {
     type: DataTypes.TIME,

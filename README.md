@@ -1,45 +1,43 @@
-# Catholiques du Monde - Scheduled Content Landing Page
+# Catholiques du Monde 🛡️✨
 
-A premium, responsive landing page where content appears automatically based on predefined time slots.
+A world-class, boutique content scheduling platform designed for high-end digital spiritual engagement.
 
-## Features
-- **Dynamic Content**: Displays different content (Image, Text, Video, Audio) based on the current time.
-- **Admin Dashboard**: Easy management of content schedules.
-- **Premium Design**: Minimalist white theme with spiritual aesthetics.
-- **Responsive**: Fully functional on mobile and desktop.
+## 🌟 Features
 
-## Tech Stack
-- **Frontend**: React, TypeScript, Vite, Framer Motion, Lucide Icons.
-- **Backend**: Node.js, Express, Sequelize.
-- **Database**: MySQL.
+### 1. Boutique Dashboard (Frontend)
+- **Elite Aesthetic:** Warm color palette with premium typography (Lora/Inter).
+- **Intelligent Card Layout:** Adaptive card height that handles images, videos, audio, and long-form text with "Ghost Scroll" technology.
+- **Smart Media Players:** Custom-designed "Gold Suite" audio player and responsive video scaling.
+- **Dynamic Action Suite:** Sticky action buttons for instant sharing and downloading.
 
-## Getting Started
+### 2. Intelligent CMS (Admin)
+- **Auto-Detection Engine:** Instant media type detection (Image/Video/Audio) from URLs and files—no manual selection required.
+- **Visual Feedback:** Real-time detection badges to confirm content identification.
+- **Streamlined Scheduling:** Effortless time-slot management with overlap protection.
+
+## 🛠️ Technology Stack
+- **Frontend:** React, TypeScript, Framer Motion, Lucide Icons, Vite.
+- **Backend:** Node.js, Express, Sequelize ORM.
+- **Database:** MySQL.
+- **Design:** Modern Boutique Minimalism.
+
+## 🚀 Deployment Guide
 
 ### Prerequisites
-- Node.js installed.
-- MySQL server running.
-- Create a database named `catholiques_du_monde`.
+- Node.js (v18+)
+- MySQL Database
 
 ### Installation
+1. Clone the repository: `git clone <your-repo-link>`
+2. **Backend Setup:**
+   - `cd Backend`
+   - `npm install`
+   - Configure `.env` with your DB credentials.
+   - `npm start`
+3. **Frontend Setup:**
+   - `cd Frontend`
+   - `npm install`
+   - `npm run dev`
 
-1. **Backend**:
-   ```bash
-   cd Backend
-   npm install
-   # Update .env with your database credentials
-   npm start
-   ```
-
-2. **Frontend**:
-   ```bash
-   cd Frontend
-   npm install
-   npm run dev
-   ```
-
-## Admin Panel
-Access the admin panel at `http://localhost:5173/admin` to schedule messages.
-Example schedules:
-- 06:00:00 - 07:00:00: Morning Gospel (Text)
-- 07:00:00 - 08:00:00: Daily Verse (Image)
-- 08:00:00 - 09:00:00: Hymn of the Day (Audio)
+---
+© 2026 Catholiques du Monde. Built for spiritual excellence.

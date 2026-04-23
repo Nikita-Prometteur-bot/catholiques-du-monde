@@ -5,10 +5,18 @@ const sequelize = require('./config/db');
 const Content = require('./models/Content');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const { Op } = require('sequelize');
 const moment = require('moment');
 
 dotenv.config();
+
+// Create uploads folder if it doesn't exist
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+  console.log('Created uploads directory');
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -117,7 +125,8 @@ app.post('/api/admin/upload', upload.single('file'), (req, res) => {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
-    const fileUrl = `http://localhost:5000/uploads/${req.file.filename}`;
+    const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
+    const fileUrl = `${baseUrl}/uploads/${req.file.filename}`;
     res.json({ url: fileUrl });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -142,7 +151,7 @@ app.post('/api/admin/login', (req, res) => {
 });
 
 // Sync Database and Start Server
-sequelize.sync().then(() => {
+sequelize.sync({ alter: true }).then(() => {
   console.log('Database connected and synced');
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

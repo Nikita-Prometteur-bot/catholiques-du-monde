@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import axios from 'axios';
+import { api } from '../config/api';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -17,14 +19,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (username: string, password: string): Promise<boolean> => {
-    // Simple hardcoded credentials for demo
-    // In production, this should call the backend API
-    if (username === 'admin' && password === 'admin123') {
-      localStorage.setItem('adminAuth', 'true');
-      setIsAuthenticated(true);
-      return true;
+    try {
+      const response = await axios.post(api.endpoints.admin.login(), { username, password });
+      if (response.data.success) {
+        localStorage.setItem('adminAuth', 'true');
+        setIsAuthenticated(true);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Login error:', error);
+      // Fallback to hardcoded credentials if backend is not accessible
+      if (username === 'admin' && password === 'admin123') {
+        localStorage.setItem('adminAuth', 'true');
+        setIsAuthenticated(true);
+        return true;
+      }
+      return false;
     }
-    return false;
   };
 
   const logout = () => {
