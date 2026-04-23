@@ -153,9 +153,14 @@ app.post('/api/admin/login', (req, res) => {
 // Sync Database and Start Server
 sequelize.sync({ alter: true }).then(() => {
   console.log('Database connected and synced');
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
+  if (process.env.VERCEL !== '1') {
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  }
 }).catch(err => {
   console.error('Unable to connect to the database:', err);
 });
+
+// Export for Vercel serverless
+module.exports = app;
