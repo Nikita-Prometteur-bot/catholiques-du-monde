@@ -48,7 +48,8 @@ const upload = multer({ storage });
 // Get current content
 app.get('/api/content/current', async (req, res) => {
   try {
-    const currentTime = moment().format('HH:mm:ss');
+    // Use IST timezone (UTC+5:30)
+    const currentTime = moment().utcOffset('+05:30').format('HH:mm:ss');
 
     const content = await Content.findOne({
       where: {
