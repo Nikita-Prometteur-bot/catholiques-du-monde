@@ -11,7 +11,7 @@ const moment = require('moment');
 
 dotenv.config();
 
-// Create uploads folder if it doesn't exist
+// Ensure uploads folder exists
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
@@ -21,11 +21,17 @@ if (!fs.existsSync(uploadsDir)) {
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+// ✅ CORS FIX (IMPORTANT)
+app.use(cors({
+  origin: "https://catholiques-du-monde-git-main-nikita-prometteur-bots-projects.vercel.app",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
+
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Configure Multer for file uploads
+// Multer setup
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, 'uploads/');
@@ -37,13 +43,13 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// Routes
-// Get current content based on time
+/* ================= ROUTES ================= */
+
+// Get current content
 app.get('/api/content/current', async (req, res) => {
   try {
-    const currentTime = moment().local().format('HH:mm:ss');
-    console.log('Current time (local):', currentTime);
-    
+    const currentTime = moment().format('HH:mm:ss');
+
     const content = await Content.findOne({
       where: {
         startTime: { [Op.lte]: currentTime },
@@ -51,21 +57,18 @@ app.get('/api/content/current', async (req, res) => {
       }
     });
 
-    console.log('Found content:', content ? content.title : 'none');
-    console.log('Content time range:', content ? `${content.startTime} - ${content.endTime}` : 'N/A');
-
     if (!content) {
       return res.status(404).json({ message: 'No content scheduled for this time' });
     }
 
     res.json(content);
   } catch (error) {
-    console.error('Error fetching current content:', error);
+    console.error(error);
     res.status(500).json({ message: error.message });
   }
 });
 
-// Admin: Get all content
+// Get all content
 app.get('/api/admin/content', async (req, res) => {
   try {
     const contents = await Content.findAll({
@@ -77,90 +80,97 @@ app.get('/api/admin/content', async (req, res) => {
   }
 });
 
-// Admin: Create content
+// Create content
 app.post('/api/admin/content', async (req, res) => {
   try {
-    console.log('Creating content with data:', req.body);
     const content = await Content.create(req.body);
-    console.log('Content created successfully:', content);
     res.status(201).json(content);
   } catch (error) {
-    console.error('Error creating content:', error);
+    console.error(error);
     res.status(400).json({ message: error.message });
   }
 });
 
-// Admin: Update content
+// Update content
 app.put('/api/admin/content/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const [updated] = await Content.update(req.body, { where: { id } });
+
     if (updated) {
       const updatedContent = await Content.findByPk(id);
       return res.json(updatedContent);
     }
+
     throw new Error('Content not found');
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
 
-// Admin: Delete content
+// Delete content
 app.delete('/api/admin/content/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const deleted = await Content.destroy({ where: { id } });
+
     if (deleted) {
       return res.json({ message: 'Content deleted' });
     }
+
     throw new Error('Content not found');
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
 });
 
-// Admin: Upload file
+// Upload file
 app.post('/api/admin/upload', upload.single('file'), (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
-    const baseUrl = process.env.BASE_URL || `http://localhost:${PORT}`;
+
+    // ✅ FIXED BASE URL
+    const baseUrl = process.env.BASE_URL || "https://catholiques-du-monde-2.onrender.com";
     const fileUrl = `${baseUrl}/uploads/${req.file.filename}`;
+
     res.json({ url: fileUrl });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 
-// Admin: Login
+// Login
 app.post('/api/admin/login', (req, res) => {
-  try {
-    const { username, password } = req.body;
-    
-    // Simple hardcoded credentials for demo
-    // In production, this should check against a database
-    if (username === 'admin' && password === 'admin123') {
-      res.json({ success: true, message: 'Login successful' });
-    } else {
-      res.status(401).json({ success: false, message: 'Invalid credentials' });
-    }
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  const { username, password } = req.body;
+
+  if (username === 'admin' && password === 'admin123') {
+    return res.json({ success: true });
   }
+
+  res.status(401).json({ success: false });
 });
 
-// Sync Database and Start Server
-sequelize.sync({ alter: true }).then(() => {
-  console.log('Database connected and synced');
-  if (process.env.VERCEL !== '1') {
+/* ================= SERVER START ================= */
+
+sequelize.authenticate()
+  .then(() => {
+    console.log('Database connected ✅');
+    return sequelize.sync();
+  })
+  .then(() => {
     app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+      console.log(`Server running on port ${PORT} 🚀`);
     });
-  }
-}).catch(err => {
-  console.error('Unable to connect to the database:', err);
-});
+  })
+  .catch((err) => {
+    console.error('Database connection failed ❌', err);
 
-// Export for Vercel serverless
+    // Still start server to avoid crash
+    app.listen(PORT, () => {
+      console.log(`Server running WITHOUT DB on port ${PORT}`);
+    });
+  });
+
 module.exports = app;

@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Download, Share2, Music, Video, Image as ImageIcon, FileText, Clock, Settings, Headphones } from 'lucide-react';
 import type { Content } from '../types';
 import { api } from '../config/api';
+import logo from "../assets/Image.png.jpeg";
+
 
 const Home: React.FC = () => {
   const [content, setContent] = useState<Content | null>(null);
@@ -123,7 +125,10 @@ const Home: React.FC = () => {
     <div className="app-container">
       <header className="main-header">
         <div className="top-bar">
-          <div className="brand-logo">CATHOLIQUES DU MONDE</div>
+          <div className="brand-container">
+            <img src={logo} alt="Catholiques du Monde" className="brand-logo" />
+            <span className="brand-text">Catholiques du Monde</span>
+          </div>
           <div className="top-right">
             <span className="current-clock">
               {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -204,8 +209,10 @@ const Home: React.FC = () => {
                     </div>
                   ) : (
                     <div className="no-content">
+                      <img src={logo} alt="Catholiques du Monde" className="no-content-logo" />
+                      <h2 className="no-content-title">Peace be with you</h2>
                       <Clock size={40} className="icon-muted" />
-                      <p>Seeking peace... Next message coming soon.</p>
+                      <p className="no-content-text">Seeking peace... Next message coming soon.</p>
                     </div>
                   )}
                 </div>
@@ -244,7 +251,7 @@ const Home: React.FC = () => {
 
         .main-header {
           width: 100%;
-          padding: 12px 5%;
+          padding: 20px 5%;
           background: white;
           border-bottom: 1px solid var(--border-color);
         }
@@ -257,10 +264,31 @@ const Home: React.FC = () => {
           margin: 0 auto;
         }
 
+        .brand-container {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
         .brand-logo {
+          height: 57px;
+          width: auto;
+          object-fit: contain;
+          border-radius: 8px;
+          filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.15));
+          transition: all 0.3s ease;
+          cursor: pointer;
+        }
+
+        .brand-logo:hover {
+          transform: scale(1.03);
+          filter: drop-shadow(0 5px 12px rgba(212, 175, 55, 0.4));
+        }
+
+        .brand-text {
           font-weight: 600;
           letter-spacing: 1.5px;
-          font-size: 0.85rem;
+          font-size: 0.9rem;
           color: var(--brand-navy);
           text-transform: uppercase;
         }
@@ -375,6 +403,42 @@ const Home: React.FC = () => {
         .loading-spinner { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 200px; }
         .spinner-dot { width: 12px; height: 12px; background: var(--brand-gold); border-radius: 50%; animation: pulse 1.5s infinite ease-in-out; }
         @keyframes pulse { 0%, 100% { transform: scale(0.8); opacity: 0.5; } 50% { transform: scale(1.2); opacity: 1; } }
+
+        .no-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 60px 20px;
+          text-align: center;
+        }
+
+        .no-content-logo {
+          width: 80px;
+          height: auto;
+          margin-bottom: 24px;
+          filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+        }
+
+        .no-content-title {
+          font-family: 'Lora', serif;
+          font-size: 1.8rem;
+          color: var(--brand-navy);
+          margin-bottom: 16px;
+          font-weight: 600;
+        }
+
+        .no-content-text {
+          font-size: 0.95rem;
+          color: var(--text-muted);
+          margin-top: 16px;
+          line-height: 1.6;
+        }
+
+        .icon-muted {
+          color: var(--brand-gold);
+          margin-bottom: 8px;
+        }
 
         @media (max-width: 600px) {
           .premium-card { max-height: 85vh; border-radius: 20px; }
