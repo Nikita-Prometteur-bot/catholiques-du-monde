@@ -23,7 +23,10 @@ const PORT = process.env.PORT || 5000;
 
 // ✅ CORS FIX (IMPORTANT)
 app.use(cors({
-  origin: "https://catholiques-du-monde-git-main-nikita-prometteur-bots-projects.vercel.app",
+  origin: [
+    "https://catholiques-du-monde-git-main-nikita-prometteur-bots-projects.vercel.app",
+    "https://catholiques-du-monde.vercel.app"
+  ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
