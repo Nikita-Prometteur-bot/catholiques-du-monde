@@ -23,7 +23,10 @@ const PORT = process.env.PORT || 5000;
 
 // ✅ CORS FIX (IMPORTANT)
 app.use(cors({
-  origin: "https://catholiques-du-monde-git-main-nikita-prometteur-bots-projects.vercel.app",
+  origin: [
+    "https://catholiques-du-monde-git-main-nikita-prometteur-bots-projects.vercel.app",
+    "https://catholiques-du-monde.vercel.app"
+  ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
@@ -48,13 +51,27 @@ const upload = multer({ storage });
 // Get current content
 app.get('/api/content/current', async (req, res) => {
   try {
-    const currentTime = moment().format('HH:mm:ss');
+    // Get current Paris time (UTC+2)
+    const now = new Date();
+    const parisHours = now.getUTCHours() + 2;
+    const parisMinutes = now.getUTCMinutes();
+    const parisSeconds = now.getUTCSeconds();
+    const currentTime = `${String(parisHours).padStart(2, '0')}:${String(parisMinutes).padStart(2, '0')}:${String(parisSeconds).padStart(2, '0')}`;
 
-    const content = await Content.findOne({
-      where: {
-        startTime: { [Op.lte]: currentTime },
-        endTime: { [Op.gte]: currentTime }
-      }
+    // Get all content and filter manually since database stores ISO datetime strings
+    const contents = await Content.findAll();
+    
+    // Find content where current time falls between start and end time
+    const content = contents.find(c => {
+      // Extract time from ISO datetime string (e.g., "2026-04-27T07:28:00.000Z" -> "07:28:00")
+      const startTimeStr = c.startTime.includes('T') 
+        ? c.startTime.split('T')[1].split('.')[0] 
+        : c.startTime;
+      const endTimeStr = c.endTime.includes('T') 
+        ? c.endTime.split('T')[1].split('.')[0] 
+        : c.endTime;
+      
+      return currentTime >= startTimeStr && currentTime <= endTimeStr;
     });
 
     if (!content) {

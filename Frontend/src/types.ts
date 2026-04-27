@@ -7,6 +7,7 @@ export type Content = {
   longText?: string;
   startTime: string;
   endTime: string;
+  scheduleDate?: string;
   isDownloadable: boolean;
   shareCount: number;
   createdAt: string;
