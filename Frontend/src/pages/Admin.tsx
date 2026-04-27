@@ -33,6 +33,7 @@ const Admin: React.FC = () => {
   const [endHour, setEndHour] = useState('07');
   const [endMinute, setEndMinute] = useState('00');
   const [endAmPm, setEndAmPm] = useState<'AM' | 'PM'>('AM');
+  const [scheduleDate, setScheduleDate] = useState(new Date().toISOString().split('T')[0]);
 
   const convertTo24Hour = (hour: string, minute: string, amPm: 'AM' | 'PM') => {
     let h = parseInt(hour, 10);
@@ -41,9 +42,36 @@ const Admin: React.FC = () => {
     return `${h.toString().padStart(2, '0')}:${minute}:00`;
   };
 
+  const getParisDateTime = (date: string, time: string) => {
+    // Store time directly as Paris time (no UTC conversion)
+    // Create ISO string that represents Paris time
+    const [hours, minutes, seconds] = time.split(':').map(Number);
+    
+    // Create date with Paris time directly (as if it's UTC for storage)
+    const parisDate = new Date(Date.UTC(
+      parseInt(date.split('-')[0]),
+      parseInt(date.split('-')[1]) - 1,
+      parseInt(date.split('-')[2]),
+      hours,
+      minutes,
+      seconds || 0
+    ));
+    
+    return parisDate.toISOString();
+  };
+
   const parseTimeToAmPm = (timeStr: string) => {
-    const [hours, minutes] = timeStr.split(':');
+    // Handle ISO datetime strings by extracting just the time portion
+    let timeOnly = timeStr;
+    if (timeStr.includes('T')) {
+      timeOnly = timeStr.split('T')[1].split('.')[0]; // Get HH:MM:SS from ISO string
+    }
+
+    const [hours, minutes] = timeOnly.split(':');
     let h = parseInt(hours, 10);
+    
+    // No conversion needed - database stores Paris time directly
+    
     const amPm: 'AM' | 'PM' = h >= 12 ? 'PM' : 'AM';
     if (h > 12) h -= 12;
     if (h === 0) h = 12;
@@ -136,19 +164,20 @@ const Admin: React.FC = () => {
     const startTime24 = convertTo24Hour(startHour, startMinute, startAmPm);
     const endTime24 = convertTo24Hour(endHour, endMinute, endAmPm);
 
-    // Validate time slot
-    if (startTime24 && endTime24) {
-      if (startTime24 >= endTime24) {
-        setFormError('End time must be after start time');
-        setSaving(false);
-        return;
-      }
+    // Validate time slot - convert to minutes for proper comparison
+    const startMinutes = parseInt(startTime24.split(':')[0]) * 60 + parseInt(startTime24.split(':')[1]);
+    const endMinutes = parseInt(endTime24.split(':')[0]) * 60 + parseInt(endTime24.split(':')[1]);
 
-      if (checkTimeOverlap(startTime24, endTime24, editingContent?.id)) {
-        setFormError('This time slot overlaps with an existing schedule');
-        setSaving(false);
-        return;
-      }
+    if (startMinutes >= endMinutes) {
+      setFormError('End time must be after start time');
+      setSaving(false);
+      return;
+    }
+
+    if (checkTimeOverlap(startTime24, endTime24, editingContent?.id)) {
+      setFormError('This time slot overlaps with an existing schedule');
+      setSaving(false);
+      return;
     }
 
     try {
@@ -162,12 +191,13 @@ const Admin: React.FC = () => {
       }
 
       // Automatically use the detected type
-      const submissionData = { 
-        ...formData, 
-        type: detectedType, 
-        contentUrl: finalContentUrl, 
-        startTime: startTime24, 
-        endTime: endTime24 
+      const submissionData = {
+        ...formData,
+        type: detectedType,
+        contentUrl: finalContentUrl,
+        startTime: getParisDateTime(scheduleDate, startTime24),
+        endTime: getParisDateTime(scheduleDate, endTime24),
+        scheduleDate: scheduleDate
       };
 
       if (editingContent?.id) {
@@ -207,7 +237,7 @@ const Admin: React.FC = () => {
     setEditingContent(content);
     setFormData(content);
     setSelectedFile(null);
-    
+
     // Parse existing times to AM/PM format
     const startParsed = parseTimeToAmPm(content.startTime);
     const endParsed = parseTimeToAmPm(content.endTime);
@@ -217,7 +247,10 @@ const Admin: React.FC = () => {
     setEndHour(endParsed.hour);
     setEndMinute(endParsed.minute);
     setEndAmPm(endParsed.amPm);
-    
+
+    // Set schedule date if exists, otherwise use today
+    setScheduleDate(content.scheduleDate || new Date().toISOString().split('T')[0]);
+
     setIsModalOpen(true);
   };
 
@@ -240,6 +273,7 @@ const Admin: React.FC = () => {
     setEndHour('07');
     setEndMinute('00');
     setEndAmPm('AM');
+    setScheduleDate(new Date().toISOString().split('T')[0]);
     setIsModalOpen(true);
   };
 
@@ -278,6 +312,7 @@ const Admin: React.FC = () => {
             <table className="content-table">
               <thead>
                 <tr>
+                  <th>Date</th>
                   <th>Time Slot</th>
                   <th>Type</th>
                   <th>Title</th>
@@ -288,6 +323,9 @@ const Admin: React.FC = () => {
               <tbody>
                 {contents.map((c) => (
                   <tr key={c.id}>
+                    <td className="date-cell">
+                      {c.scheduleDate ? new Date(c.scheduleDate).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Today'}
+                    </td>
                     <td className="time-cell">
                       <Clock size={14} /> {c.startTime.substring(0, 5)} - {c.endTime.substring(0, 5)}
                     </td>
@@ -361,6 +399,17 @@ const Admin: React.FC = () => {
                     <option value="no">✗ No</option>
                   </select>
                 </div>
+              </div>
+              <div className="form-group">
+                <label>Schedule Date</label>
+                <input
+                  type="date"
+                  value={scheduleDate}
+                  onChange={(e) => setScheduleDate(e.target.value)}
+                  required
+                  className="date-input"
+                  min={new Date().toISOString().split('T')[0]}
+                />
               </div>
               <div className="form-row">
                 <div className="form-group">
@@ -567,6 +616,11 @@ const Admin: React.FC = () => {
           gap: 8px;
           color: var(--gold);
           font-weight: 500;
+        }
+        .date-cell {
+          color: var(--text-muted);
+          font-weight: 500;
+          font-size: 0.9rem;
         }
         .type-icon {
           display: inline-flex;
@@ -839,6 +893,23 @@ const Admin: React.FC = () => {
           font-size: 1.1rem;
           color: var(--text-muted);
           font-weight: 500;
+        }
+        .date-input {
+          width: 100%;
+          padding: 14px 16px;
+          border: 2px solid #e8e8e8;
+          border-radius: 12px;
+          font-size: 0.95rem;
+          font-family: inherit;
+          transition: all 0.2s;
+          background: #fafafa;
+          cursor: pointer;
+        }
+        .date-input:focus {
+          outline: none;
+          border-color: var(--gold);
+          background: white;
+          box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
         }
       `}</style>
     </div>

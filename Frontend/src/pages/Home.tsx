@@ -13,14 +13,40 @@ const Home: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
 
+  const getParisTime = () => {
+    // Get current time components in UTC from currentTime state
+    const utcYear = currentTime.getUTCFullYear();
+    const utcMonth = currentTime.getUTCMonth();
+    const utcDate = currentTime.getUTCDate();
+    const utcHours = currentTime.getUTCHours();
+    const utcMinutes = currentTime.getUTCMinutes();
+    const utcSeconds = currentTime.getUTCSeconds();
+    
+    // Paris is UTC+2, so add 2 hours to UTC time
+    const parisHours = utcHours + 2;
+    
+    // Create date with Paris time
+    const parisTime = new Date(Date.UTC(utcYear, utcMonth, utcDate, parisHours, utcMinutes, utcSeconds));
+    return parisTime;
+  };
+
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     fetchCurrentContent();
-    const contentTimer = setInterval(fetchCurrentContent, 60000);
+    const contentTimer = setInterval(fetchCurrentContent, 10000); // Refresh every 10 seconds
+
+    // Refresh when user comes back to the page
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetchCurrentContent();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
       clearInterval(timer);
       clearInterval(contentTimer);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
@@ -38,7 +64,8 @@ const Home: React.FC = () => {
   };
 
   const getGreeting = () => {
-    const hour = currentTime.getHours();
+    // Use getUTCHours since getParisTime returns a UTC date (with +2 hours offset for Paris)
+    const hour = getParisTime().getUTCHours();
     if (hour < 12) return 'Good Morning';
     if (hour < 17) return 'Good Afternoon';
     if (hour < 21) return 'Good Evening';
@@ -131,7 +158,7 @@ const Home: React.FC = () => {
           </div>
           <div className="top-right">
             <span className="current-clock">
-              {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {getParisTime().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC', hour12: true })}
             </span>
             <Link to="/login" className="settings-btn">
               <Settings size={16} />
@@ -145,7 +172,7 @@ const Home: React.FC = () => {
           <h1 className="greeting-text">{getGreeting()}</h1>
           <div className="time-badge">
              <span className="dot"></span>
-             {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}
+             {getParisTime().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC', hour12: false })}
           </div>
         </div>
 
