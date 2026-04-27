@@ -14,14 +14,13 @@ const Home: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   const getParisTime = () => {
-    // Get current time components in UTC
-    const now = new Date();
-    const utcYear = now.getUTCFullYear();
-    const utcMonth = now.getUTCMonth();
-    const utcDate = now.getUTCDate();
-    const utcHours = now.getUTCHours();
-    const utcMinutes = now.getUTCMinutes();
-    const utcSeconds = now.getUTCSeconds();
+    // Get current time components in UTC from currentTime state
+    const utcYear = currentTime.getUTCFullYear();
+    const utcMonth = currentTime.getUTCMonth();
+    const utcDate = currentTime.getUTCDate();
+    const utcHours = currentTime.getUTCHours();
+    const utcMinutes = currentTime.getUTCMinutes();
+    const utcSeconds = currentTime.getUTCSeconds();
     
     // Paris is UTC+2, so add 2 hours to UTC time
     const parisHours = utcHours + 2;
