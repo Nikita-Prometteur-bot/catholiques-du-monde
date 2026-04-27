@@ -195,9 +195,8 @@ const Admin: React.FC = () => {
         ...formData,
         type: detectedType,
         contentUrl: finalContentUrl,
-        startTime: getParisDateTime(scheduleDate, startTime24),
-        endTime: getParisDateTime(scheduleDate, endTime24),
-        scheduleDate: scheduleDate
+        startTime: startTime24,
+        endTime: endTime24
       };
 
       if (editingContent?.id) {

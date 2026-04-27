@@ -51,12 +51,16 @@ const upload = multer({ storage });
 // Get current content
 app.get('/api/content/current', async (req, res) => {
   try {
-    // Get current Paris time (UTC+2)
+    // Get current Paris time using Intl API (handles daylight saving automatically)
     const now = new Date();
-    const parisHours = now.getUTCHours() + 2;
-    const parisMinutes = now.getUTCMinutes();
-    const parisSeconds = now.getUTCSeconds();
-    const currentTime = `${String(parisHours).padStart(2, '0')}:${String(parisMinutes).padStart(2, '0')}:${String(parisSeconds).padStart(2, '0')}`;
+    const parisTimeStr = now.toLocaleTimeString('en-US', {
+      timeZone: 'Europe/Paris',
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+    const currentTime = parisTimeStr;
 
     // Get all content and filter manually since database stores ISO datetime strings
     const contents = await Content.findAll();
