@@ -100,19 +100,40 @@ app.get('/api/admin/content', async (req, res) => {
 // Create content
 app.post('/api/admin/content', async (req, res) => {
   try {
-    const content = await Content.create(req.body);
+    // Extract time from ISO datetime strings (e.g., "2026-04-27T08:17:00.000Z" -> "08:17:00")
+    const data = { ...req.body };
+    if (data.startTime && data.startTime.includes('T')) {
+      data.startTime = data.startTime.split('T')[1].split('.')[0];
+    }
+    if (data.endTime && data.endTime.includes('T')) {
+      data.endTime = data.endTime.split('T')[1].split('.')[0];
+    }
+    
+    console.log('Creating content with time:', data.startTime, '-', data.endTime);
+    const content = await Content.create(data);
+    console.log('Content created:', content.id);
     res.status(201).json(content);
   } catch (error) {
-    console.error(error);
-    res.status(400).json({ message: error.message });
+    console.error('Create content error:', error);
+    res.status(400).json({ message: error.message, details: error.errors });
   }
 });
 
 // Update content
 app.put('/api/admin/content/:id', async (req, res) => {
   try {
+    // Extract time from ISO datetime strings (e.g., "2026-04-27T08:17:00.000Z" -> "08:17:00")
+    const data = { ...req.body };
+    if (data.startTime && data.startTime.includes('T')) {
+      data.startTime = data.startTime.split('T')[1].split('.')[0];
+    }
+    if (data.endTime && data.endTime.includes('T')) {
+      data.endTime = data.endTime.split('T')[1].split('.')[0];
+    }
+    
+    console.log('Updating content with time:', data.startTime, '-', data.endTime);
     const { id } = req.params;
-    const [updated] = await Content.update(req.body, { where: { id } });
+    const [updated] = await Content.update(data, { where: { id } });
 
     if (updated) {
       const updatedContent = await Content.findByPk(id);
