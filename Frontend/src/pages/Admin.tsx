@@ -42,24 +42,6 @@ const Admin: React.FC = () => {
     return `${h.toString().padStart(2, '0')}:${minute}:00`;
   };
 
-  const getParisDateTime = (date: string, time: string) => {
-    // Store time directly as Paris time (no UTC conversion)
-    // Create ISO string that represents Paris time
-    const [hours, minutes, seconds] = time.split(':').map(Number);
-    
-    // Create date with Paris time directly (as if it's UTC for storage)
-    const parisDate = new Date(Date.UTC(
-      parseInt(date.split('-')[0]),
-      parseInt(date.split('-')[1]) - 1,
-      parseInt(date.split('-')[2]),
-      hours,
-      minutes,
-      seconds || 0
-    ));
-    
-    return parisDate.toISOString();
-  };
-
   const parseTimeToAmPm = (timeStr: string) => {
     // Handle ISO datetime strings by extracting just the time portion
     let timeOnly = timeStr;
